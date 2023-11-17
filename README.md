@@ -34,19 +34,21 @@ This PHP script is designed to import products into a PrestaShop store using the
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/your/repository.git
+   git clone https://github.com/palmamora/prestashop-product-import-script.git
    cd repository
 
 2. Install dependencies:
 
+   ```bash
    composer install
 
 3. Create a .env file in the project root (review .env.example) and add the following environment variables:
-
-env
-API_KEY=your_prestashop_api_key
-API_URL=https://your-prestashop-store.com
-IMAGES_FOLDER=/path/to/images
+   ```
+   env
+   API_KEY=your_prestashop_api_key
+   API_URL=https://your-prestashop-store.com
+   IMAGES_FOLDER=/path/to/images
+   ```
 
 ## Usage
 
