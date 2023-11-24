@@ -30,7 +30,20 @@ if ($data !== null) {
 
 
     foreach ($data as $key => $producto) {
+        continue;
         $producto['id'];
+        $producto['codigo'];
+        $producto['producto'];
+        $producto['unidad'];
+        $producto['precio'];
+        $producto['imagen'];
+        $producto['deleted'];
+        $producto['activo'];
+        $producto['archivo'];
+        $producto['cantidad'];
+        $producto['oferta'];
+        $producto['categoria'];
+        $producto['porcdescuento'];
     }
 
     foreach ($products as $p) {
@@ -140,6 +153,7 @@ if ($data !== null) {
     $category = $fields->associations->categories->addChild('category')->addChild('id', '10');
 
     $product_feature = $fields->associations->product_features->addChild('product_feature');
+    $tags = $fields->associations->tags->addChild('tag', 'zapatillas');
 
     $createdXml = $webService->add([
         'resource' => 'products',
@@ -149,6 +163,7 @@ if ($data !== null) {
     $newProductFields = $createdXml->children()->children();
     //echo 'product created with id ' . $newProductFields->id;
     var_dump($newProductFields);
+    exit;
 
 } else {
     header('Content-Type: application/json');
