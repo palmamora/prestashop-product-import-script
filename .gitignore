@@ -1,3 +1,4 @@
 /vendor
+*.zip
 .env
 composer.lock

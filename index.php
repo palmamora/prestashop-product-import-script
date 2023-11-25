@@ -18,92 +18,100 @@ $data = json_decode($data, true);
 $manufacturerId = 4;
 $supplierId = 1;
 $languageId = 2;
-$categoryId = 10;
+$categoryId = 20;
 
 $categories = [
-    'cierres' => 11,
-    'pastelones' => 12,
-    'locetas' => 13,
-    'piscinas' => 14,
-    'jardin' => 15,
-    'alcantarillado' => 16,
-    'tubos' => 17,
-    'construccion' => 18,
-    'aridos' => 19,
-    'ofertas' => 20
+    0 => 20,
+    1 => 10,
+    2 => 11,
+    3 => 12,
+    4 => 13,
+    5 => 14,
+    6 => 15,
+    7 => 16,
+    8 => 17,
+    9 => 18,
+    10 => 19
 ];
 
-if ($data !== null) {
-    $webService = new PrestaShopWebservice(API_URL, API_KEY, false);
+$result = [];
+// $product = $webService->get([
+//     'resource' => 'products',
+//     'id' => $p->id,
+// ]);
 
+$webService = new PrestaShopWebservice(API_URL, API_KEY, false);
+
+if (!is_null($data)) {
     //get id list of products of store
-    $xml = $webService->get(['resource' => 'products', 'display' => '[id, name, description, description_short, price, active, type, product_type]']);
-    $products = $xml->products->children();
-    $products_arr = [];
+    $xml = $webService->get([
+        'resource' => 'products',
+        'display' => '[id, name, description, description_short, price, active, type, product_type, reference]'
+    ]);
+    $publishedProducts = $xml->children()->children();
+    
+    $cont = 0;
+
+    foreach ($data as $key => $newProduct) {
+        if ($newProduct['archivo'] == 'NN') {
+            //continue;
+        }
+        /*campos: id, codigo, producto, unidad, precio, imagen, deleted, activo, archivo, cantidad, oferta, categoria, porcdescuento*/
+        //search new product on published products
+        $exists = 0;
+        foreach ($publishedProducts as $publishedProduct) {
+            if ($publishedProduct->reference == $newProduct['id']) {
+                $exists = 1;
+            }
+        } //end foreach
+
+        //if the product not exists, then create the product, if exists then update.
+        if ($exists == 0) {
+            echo 'producto no existe...creando';
+            $id = createProduct(1, $newProduct['id'], $newProduct['precio'], $newProduct['activo'], 1, $newProduct['activo'], $newProduct['producto'], $newProduct['producto'], $newProduct['codigo'], $newProduct['categoria']);
+            //if there is a image, then upload the image and associate it to the new product id.
+            echo 'producto creado.';
+            if (!is_null($id) && $newProduct['archivo'] !== 'NN' && isset($newProduct['imagen']) && !is_null($newProduct['imagen'])) {
+                //uploadImg($id, IMAGES_FOLDER, 'image/jpg', $newProduct['imagen']);
+            }
+            $result[$newProduct['id']] = 'CREATED ' . $newProduct['id'];
+        } else if ($exists == 1) {
+            //code for update
+            $result[$newProduct['id']] = 'UPDATED ' . $newProduct['id'];
+        }
+    } //end foreach
+
+    var_dump($result);
+}
 
 
-    foreach ($data as $key => $producto) {
-        continue;
-        $producto['id'];
-        $producto['codigo'];
-        $producto['producto'];
-        $producto['unidad'];
-        $producto['precio'];
-        $producto['imagen'];
-        $producto['deleted'];
-        $producto['activo'];
-        $producto['archivo'];
-        $producto['cantidad'];
-        $producto['oferta'];
-        $producto['categoria'];
-        $producto['porcdescuento'];
-    }
+if (is_null($data)) {
+    header('Content-Type: application/json');
+    echo json_encode(['error' => 'null data']);
+    exit;
+}
 
-    foreach ($products as $p) {
-        //$attributes = $p->attributes();
+function createProduct(
+    $new = 1, $reference = 0, $price = 1000, $active = 1, $show_price = 1, $state = 1, $name = 'Producto sin nombre', $description = 'Producto sin descripci贸n', $resume = '', $category = 0) {
+    global $webService, $manufacturerId, $supplierId, $categoryId, $categories;
 
-        $product = $webService->get([
-            'resource' => 'products',
-            'id' => 49,
-        ]);
-
-        $productFields = $product->children()->children();
-        //var_dump($productFields);
-        //exit;
-
-        // echo 'id->' . $productFields->id;
-        // echo 'id_manufacturer->' . $productFields->id_manufacturer;
-        // echo 'id_supplier->' . $productFields->id_supplier;
-        // echo 'id_category_default->' . $productFields->id_category_default;
-        // echo 'position_in_category->' . $productFields->position_in_category;
-        // echo 'price->' . $productFields->price;
-        // echo 'product_type->' . $productFields->product_type;
-        // echo 'language->' . $productFields->name->language;
-        // echo 'language->' . $productFields->description->language;
-        // echo 'online_only->' . $productFields->online_only;
-        // echo 'active->' . $productFields->active;
-        // echo 'product_feature->' . $productFields->associations->product_features->product_feature->id;
-        // echo 'product_feature_value->' . $productFields->associations->product_features->product_feature->id_feature_value;
-        // echo '<hr>';
-    }
-
-    //post new product
     $blankXml = $webService->get(['url' => API_URL . '/api/products?schema=blank']);
+    echo 'acá1';
     $fields = $blankXml->children()->children();
-
+    echo 'acá2';
     $fields->id;
     $fields->id_manufacturer = $manufacturerId;
     $fields->id_supplier = $supplierId;
     $fields->id_category_default = $categoryId;
-    $fields->new;
+    $fields->new = $new;
     $fields->cache_default_attribute;
     $fields->id_default_image = 1;
     $fields->id_default_combination;
     $fields->id_tax_rules_group;
-    $fields->position_in_category = 1;
+    //$fields->position_in_category = 1;
     $fields->type = 'virtual';
     $fields->id_shop_default;
-    $fields->reference = 'ref_product';
+    $fields->reference = $reference;
     $fields->supplier_reference;
     $fields->location;
     $fields->width;
@@ -120,7 +128,7 @@ if ($data !== null) {
     $fields->online_only = 1;
     $fields->ecotax;
     $fields->minimal_quantity;
-    $fields->price = 2000;
+    $fields->price = $price;
     $fields->wholesale_price;
     $fields->unity;
     $fields->unit_price_ratio;
@@ -128,19 +136,19 @@ if ($data !== null) {
     $fields->customizable;
     $fields->text_fields;
     $fields->uploadable_files;
-    $fields->active = 1;
+    $fields->active = $active;
     $fields->redirect_type;
     $fields->id_product_redirected;
     $fields->available_for_order = 1;
     $fields->available_date;
     $fields->condition;
-    $fields->show_price = 1;
+    $fields->show_price = $show_price;
     $fields->indexed;
     $fields->visibility;
     $fields->advanced_stock_management;
     $fields->date_add;
     $fields->date_upd;
-    $fields->state = '1';
+    $fields->state = $state;
 
     $meta_description = $fields->meta_description->addChild('language', 'description');
     $meta_description->addAttribute('id', 2);
@@ -154,36 +162,33 @@ if ($data !== null) {
     $link_rewrite = $fields->link_rewrite->addChild('language', 'my-product');
     $link_rewrite->addAttribute('id', 2);
 
-    $name = $fields->name->addChild('language', 'Product Name');
+    $name = $fields->name->addChild('language', $name);
     $name->addAttribute('id', 2);
 
-    $description = $fields->description->addChild('language', 'Product description');
+    $description = $fields->description->addChild('language', $description);
     $description->addAttribute('id', 2);
 
-    $description_short = $fields->description_short->addChild('language', 'Resume');
+    $description_short = $fields->description_short->addChild('language', $resume);
     $description_short->addAttribute('id', 2);
 
-    $category = $fields->associations->categories->addChild('category')->addChild('id', '10');
+    $category = $fields->associations->categories->addChild('category')->addChild('id', $categories[$category]);
 
-    $product_feature = $fields->associations->product_features->addChild('product_feature');
-    $tags = $fields->associations->tags->addChild('tag', 'zapatillas');
-
+    //$product_feature = $fields->associations->product_features->addChild('product_feature');
+    //$tags = $fields->associations->tags->addChild('tag', 'zapatillas');
+    echo 'acá3';
     $createdXml = $webService->add([
         'resource' => 'products',
         'postXml' => $blankXml->asXML(),
     ]);
-
-    $newProductFields = $createdXml->children()->children();
-    //echo 'product created with id ' . $newProductFields->id;
-    var_dump($newProductFields);
-    exit;
-
-} else {
-    header('Content-Type: application/json');
-    echo json_encode(['error' => 'null data']);
+    echo 'acá4';
+    $newProduct = $createdXml->children()->children();
+    var_dump($createdXml);
+    echo 'acá5';
+    echo 'producto creado con id-> ' . $newProduct->id;
+    return $newProduct->id;
 }
 
-function uploadImg($productId, $imagePath = IMAGES_FOLDER, $imageMime = 'image/jpg')
+function uploadImg($productId, $imagePath = IMAGES_FOLDER, $imageMime = 'image/jpg', $imageBase64 = '')
 {
     /**
      * Auxiliar function to upload image resources to prestashop.
@@ -192,12 +197,12 @@ function uploadImg($productId, $imagePath = IMAGES_FOLDER, $imageMime = 'image/j
      */
 
     $apiUrl = API_URL . '/api/images/products/' . $productId;
-    $imgContent = file_get_contents($imagePath);
-    $imgBase64 = base64_encode($imgContent);
-    $imgData = base64_decode($imgBase64);
+    //$imageContent = file_get_contents($imagePath);
+    //$imageBase64 = base64_encode($imageContent);
+    $imageData = base64_decode($imageBase64);
     $tempFilePath = __DIR__ . '/temp_img.jpg';
 
-    file_put_contents($tempFilePath, $imgData);
+    file_put_contents($tempFilePath, $imageData);
 
     //$args['image'] = new CURLFile($imagePath, $imageMime);
     $args['image'] = new CURLFile($tempFilePath, $imageMime);
@@ -223,8 +228,31 @@ function uploadImg($productId, $imagePath = IMAGES_FOLDER, $imageMime = 'image/j
     unlink($tempFilePath);
 
     if (200 == $httpCode) {
-        echo 'Product image was successfully created.';
+        return true;
     } else {
-        echo 'error: ' . $httpCode;
+        return false;
+    }
+}
+
+function getMimeType($path)
+{
+    $extension = pathinfo($path, PATHINFO_EXTENSION);
+    $extension = strtolower($extension);
+
+    $mimeTypes = [
+        'jpg' => 'image/jpeg',
+        'jpeg' => 'image/jpeg',
+        'png' => 'image/png',
+        'gif' => 'image/gif',
+        // agrega m谩s extensiones y MIME types seg煤n sea necesario.
+    ];
+
+    // verifica si la extensi贸n existe en el mapeo.
+    if (array_key_exists($extension, $mimeTypes)) {
+        // obtiene el MIME type correspondiente
+        $mime_type = $mimeTypes[$extension];
+        return $mime_type;
+    } else {
+        return $mimeTypes['jpg'];
     }
 }
