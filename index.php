@@ -20,6 +20,19 @@ $supplierId = 1;
 $languageId = 2;
 $categoryId = 10;
 
+$categories = [
+    'cierres' => 11,
+    'pastelones' => 12,
+    'locetas' => 13,
+    'piscinas' => 14,
+    'jardin' => 15,
+    'alcantarillado' => 16,
+    'tubos' => 17,
+    'construccion' => 18,
+    'aridos' => 19,
+    'ofertas' => 20
+];
+
 if ($data !== null) {
     $webService = new PrestaShopWebservice(API_URL, API_KEY, false);
 
